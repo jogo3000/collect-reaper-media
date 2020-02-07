@@ -26,7 +26,7 @@
       (= \< c)
       (assoc s
              :stack (conj stack group)
-             :group []
+             :group [:<]
              :node [])
 
       (= \> c)
@@ -46,7 +46,7 @@
 
       (= \space c)
       (assoc s
-             :node (if-not (empty? symbol) (conj node (apply str symbol)) node)
+             :node (store-symbol node symbol)
              :symbol [])
 
       (= \" c)
@@ -56,7 +56,22 @@
       (assoc s :symbol (conj symbol c)))))
 
 (defn parse-rpp [rpp-string]
-  (reduce consume state rpp-file))
+  (->> (reduce consume state rpp-file)
+       :group
+       first))
 
 (defn parse-rpp-file [path-to-rpp]
   (parse-rpp (slurp path-to-rpp)))
+
+;; FIXME these output functions don't work
+(defn output-node [node level]
+  (let [nesting (->> (repeat (* 2 level) " ") (apply str))]
+    (str nesting (str/join " " node))))
+
+(defn output-group [node level]
+  (let [nesting (->> (repeat (* 2 level) " ") (apply str))]
+    (cons nesting
+          (cons "<" (map #(output-node % (inc level)) (rest node))))))
+
+(defn output-rpp [dom]
+  (output-group dom 0))

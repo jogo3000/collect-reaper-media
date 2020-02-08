@@ -1,1 +1,4 @@
-{:paths ["src/main/clj"]}
+{:paths ["src/main/clj"]
+
+ :aliases
+ {:test {:extra-paths ["test/main/clj"]}}}

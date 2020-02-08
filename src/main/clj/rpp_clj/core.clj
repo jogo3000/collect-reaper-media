@@ -63,15 +63,22 @@
 (defn parse-rpp-file [path-to-rpp]
   (parse-rpp (slurp path-to-rpp)))
 
-;; FIXME these output functions don't work
-(defn output-node [node level]
-  (let [nesting (->> (repeat (* 2 level) " ") (apply str))]
-    (str nesting (str/join " " node))))
+
+(defn nesting [level]
+  (->> (repeat (* 2 level) " ") (apply str)))
 
 (defn output-group [node level]
-  (let [nesting (->> (repeat (* 2 level) " ") (apply str))]
-    (cons nesting
-          (cons "<" (map #(output-node % (inc level)) (rest node))))))
+  (let [hanging-ingress (nesting level)
+        ingress (nesting (inc level))
+        [_ child & children] node
+        first-row (str hanging-ingress "<" (str/join \space child))]
+    (concat (cons first-row
+                  (map #(if (= :< (first %))
+                          (str/join \newline (output-group % (inc level)))
+                          (str ingress (str/join \space %))) children))
+            (list (str hanging-ingress \>))))
+)
 
 (defn output-rpp [dom]
-  (output-group dom 0))
+  (->> (output-group dom 0)
+       (str/join \newline)))

@@ -17,3 +17,5 @@ Reaper project cleaning tools.
 Should command words be keywordized and parameters typed? It would
 look a lot cleaner when printing out the dom of an RPP file in the
 repl and potentially help processing the data
+Problem with this approach is sometimes there are strings in there
+which aren't quoted

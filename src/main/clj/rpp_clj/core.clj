@@ -9,8 +9,17 @@
    :node []})
 
 (defn- store-symbol [node symbol]
-  (if(empty? symbol) node
+  (if (empty? symbol) node
      (conj node (apply str symbol))))
+
+(defn- keywordize-attr [node]
+  (let [[attr & params] node
+        attr (-> (str/lower-case attr) (str/replace #"_" "-") keyword)]
+    (vec (cons attr params))))
+
+(defn- store-node [group node]
+  (if (empty? node) group
+      (conj group (keywordize-attr node))))
 
 (defn- consume [{:keys [group stack state symbol node] :as s} c]
   (if (= state :quoted)
@@ -40,7 +49,7 @@
         (assoc s :state :idle
                :symbol []
                :node []
-               :group (if-not (empty? node) (conj group node) group)))
+               :group (store-node group node)))
 
       (= \space c)
       (assoc s
@@ -58,7 +67,7 @@
   starts a new vector with :< as the first element. All other parameters are stored
   as vectors with the keyword in the beginning and each parameter as their own element"
   [rpp-string]
-  (->> (reduce consume state rpp-file)
+  (->> (reduce consume state rpp-string)
        :group
        first))
 
@@ -67,17 +76,23 @@
   [path-to-rpp]
   (parse-rpp (slurp path-to-rpp)))
 
+(defn- kw->attr-name [kw]
+  (-> (name kw) (str/replace #"-" "_") (str/upper-case)))
 
 (defn- nesting [level]
   (->> (repeat (* 2 level) " ") (apply str)))
 
 (defn- output-header [header level]
-  (let [ingress (nesting level)]
-    (str ingress "<" (str/join \space header))))
+  (let [ingress (nesting level)
+        [kw & args] header
+        header-name (kw->attr-name kw)]
+    (str ingress "<" (str/join \space (cons header-name args)))))
 
 (defn- output-attribute [attr level]
-  (let [ingress (nesting level)]
-    (str ingress (str/join \space attr))))
+  (let [ingress (nesting level)
+        [kw & args] attr
+        attr-name (kw->attr-name kw)]
+    (str ingress (str/join \space (cons attr-name args)))))
 
 (defn- output-group [node level]
   (let [hanging-ingress (nesting level)

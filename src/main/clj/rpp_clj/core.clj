@@ -1,18 +1,18 @@
 (ns rpp-clj.core
   (:require [clojure.string :as str]))
 
-(def state
+(def ^private state
   {:stack []
    :state :idle
    :group []
    :symbol []
    :node []})
 
-(defn store-symbol [node symbol]
+(defn- store-symbol [node symbol]
   (if(empty? symbol) node
      (conj node (apply str symbol))))
 
-(defn consume [{:keys [group stack state symbol node] :as s} c]
+(defn- consume [{:keys [group stack state symbol node] :as s} c]
   (if (= state :quoted)
     (if-not (= c \")
       (assoc s :symbol (conj symbol c))
@@ -53,19 +53,25 @@
       :else
       (assoc s :symbol (conj symbol c)))))
 
-(defn parse-rpp [rpp-string]
+(defn parse-rpp
+    "Take an RPP file in string format and outputs a DOM representation. Every <
+  starts a new vector with :< as the first element. All other parameters are stored
+  as vectors with the keyword in the beginning and each parameter as their own element"
+  [rpp-string]
   (->> (reduce consume state rpp-file)
        :group
        first))
 
-(defn parse-rpp-file [path-to-rpp]
+(defn parse-rpp-file
+  "Takes a path to an RPP file and returns a DOM representation."
+  [path-to-rpp]
   (parse-rpp (slurp path-to-rpp)))
 
 
-(defn nesting [level]
+(defn- nesting [level]
   (->> (repeat (* 2 level) " ") (apply str)))
 
-(defn output-group [node level]
+(defn- output-group [node level]
   (let [hanging-ingress (nesting level)
         ingress (nesting (inc level))
         [_ child & children] node
@@ -77,6 +83,8 @@
             (list (str hanging-ingress \>))))
 )
 
-(defn output-rpp [dom]
+(defn output-rpp
+  "Takes a DOM representation and outputs a string representation in the RPP file format"
+  [dom]
   (->> (output-group dom 0)
        (str/join \newline)))

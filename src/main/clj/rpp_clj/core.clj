@@ -1,7 +1,7 @@
 (ns rpp-clj.core
   (:require [clojure.string :as str]))
 
-(def ^private state
+(def ^{:private true} state
   {:stack []
    :state :idle
    :group []
@@ -71,15 +71,22 @@
 (defn- nesting [level]
   (->> (repeat (* 2 level) " ") (apply str)))
 
+(defn- output-header [header level]
+  (let [ingress (nesting level)]
+    (str ingress "<" (str/join \space header))))
+
+(defn- output-attribute [attr level]
+  (let [ingress (nesting level)]
+    (str ingress (str/join \space attr))))
+
 (defn- output-group [node level]
   (let [hanging-ingress (nesting level)
-        ingress (nesting (inc level))
-        [_ child & children] node
-        first-row (str hanging-ingress "<" (str/join \space child))]
+        [_ header & children] node
+        first-row (output-header header level)]
     (concat (cons first-row
                   (map #(if (= :< (first %))
                           (str/join \newline (output-group % (inc level)))
-                          (str ingress (str/join \space %))) children))
+                          (output-attribute % (inc level))) children))
             (list (str hanging-ingress \>))))
 )
 

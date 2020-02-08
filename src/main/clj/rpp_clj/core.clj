@@ -1,8 +1,6 @@
 (ns rpp-clj.core
   (:require [clojure.string :as str]))
 
-(def rpp-file (slurp "/home/jogo3000/Documents/REAPER Media/arrangement3/arrangement3.RPP"))
-
 (def state
   {:stack []
    :state :idle

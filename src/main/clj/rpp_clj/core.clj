@@ -21,50 +21,56 @@
   (if (empty? node) group
       (conj group (keywordize-attr node))))
 
-(defn- consume [{:keys [group stack mode symbol node] :as state} c]
-  (if (= mode :quoted)
-    (if-not (= c \")
-      (assoc state :symbol (conj symbol c))
+(defn- consume-quoted [{:keys [symbol node] :as state} c]
+  (if-not (= c \")
+    (assoc state :symbol (conj symbol c))
+    (assoc state
+           :mode :default
+           :symbol []
+           :node (conj node (str \" (str/join symbol) \")))))
+
+(defn- consume-default [{:keys [group stack symbol node] :as state} c]
+  (cond
+    (= \< c)
+    (assoc state
+           :mode :default
+           :stack (conj stack group)
+           :group [:<]
+           :node [])
+
+    (= \> c)
+    (assoc state
+           :mode :default
+           :stack (pop stack)
+           :group (conj (last stack) group)
+           :node [])
+
+    (or (= \return c)
+        (= \newline c))
+    (let [node (store-symbol node symbol)]
       (assoc state
              :mode :default
              :symbol []
-             :node (conj node (str \" (apply str symbol) \"))))
-    (cond
-      (= \< c)
-      (assoc state
-             :mode :default
-             :stack (conj stack group)
-             :group [:<]
-             :node [])
+             :node []
+             :group (store-node group node)))
 
-      (= \> c)
-      (assoc state
-             :mode :default
-             :stack (pop stack)
-             :group (conj (last stack) group)
-             :node [])
+    (= \space c)
+    (assoc state
+           :node (store-symbol node symbol)
+           :symbol [])
 
-      (or (= \return c)
-          (= \newline c))
-      (let [node (store-symbol node symbol)]
-        (assoc state
-               :mode :default
-               :symbol []
-               :node []
-               :group (store-node group node)))
+    (= \" c)
+    (assoc state
+           :mode :quoted
+           :symbol [])
 
-      (= \space c)
-      (assoc state
-             :node (store-symbol node symbol)
-             :symbol [])
+    :else
+    (assoc state :symbol (conj symbol c))))
 
-      (= \" c)
-      (assoc state
-             :mode :quoted
-             :symbol [])
-
-      :else
-      (assoc state :symbol (conj symbol c)))))
+(defn- consume [{:keys [mode] :as state} c]
+  (if (= mode :quoted)
+    (consume-quoted state c)
+    (consume-default state c)))
 
 (defn parse-rpp
     "Take an RPP file in string format and outputs a DOM representation. Every <

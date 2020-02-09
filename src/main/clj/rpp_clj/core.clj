@@ -1,4 +1,5 @@
 (ns rpp-clj.core
+  "Core functionality for parsing and outputting RPP project files used in Reaper DAW."
   (:require [clojure.string :as str]))
 
 (def ^{:private true} state
@@ -21,7 +22,10 @@
   (if (empty? node) group
       (conj group (keywordize-attr node))))
 
-(defn- consume-quoted [{:keys [symbol node] :as state} c]
+(defn- consume-quoted
+  "Consumes characters for a symbol until another double quote is found.
+  FIXME: doesn't handle escape characters! How does Reaper RPP file encode them?"
+  [{:keys [symbol node] :as state} c]
   (if-not (= c \")
     (assoc state :symbol (conj symbol c))
     (assoc state
@@ -29,7 +33,11 @@
            :symbol []
            :node (conj node (str \" (str/join symbol) \")))))
 
-(defn- consume-default [{:keys [group stack symbol node] :as state} c]
+(defn- consume-default
+  "Consumes characters until control character is found.
+  If a control character is consumed, the characters found are grouped
+  into symbols, nodes and groups."
+  [{:keys [group stack symbol node] :as state} c]
   (cond
     (= \< c)
     (assoc state

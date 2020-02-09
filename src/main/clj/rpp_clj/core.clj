@@ -10,7 +10,7 @@
 
 (defn- store-symbol [node symbol]
   (if (empty? symbol) node
-     (conj node (apply str symbol))))
+     (conj node (str/join symbol))))
 
 (defn- keywordize-attr [node]
   (let [[attr & params] node
@@ -90,7 +90,7 @@
   (-> (name kw) (str/replace #"-" "_") (str/upper-case)))
 
 (defn- nesting [level]
-  (->> (repeat (* 2 level) " ") (apply str)))
+  (->> (repeat (* 2 level) " ") (str/join)))
 
 (defn- output-header [header level]
   (let [ingress (nesting level)

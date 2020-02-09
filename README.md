@@ -14,8 +14,10 @@ Reaper project cleaning tools.
 
 
 # TODO
-Should command words be keywordized and parameters typed? It would
-look a lot cleaner when printing out the dom of an RPP file in the
-repl and potentially help processing the data
-Problem with this approach is sometimes there are strings in there
-which aren't quoted
+Is it a good idea to furhter parse the arguments? Currently everything
+is considered a String argument. It might be easier to manipulate the
+DOM if those types would be changed to native types. The problem with
+this approach is that all of the String typed arguments aren't
+systemically quoted. That makes it somewhat harder to render the DOM
+as a Reaper project file when your edits have been done. I didn't
+test if Reaper would accept quoted strings everywhere yet.

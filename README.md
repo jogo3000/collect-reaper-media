@@ -12,6 +12,53 @@ XML" but not quite.
 Therefore, I decided to write a parser which I can use to help create my
 Reaper project cleaning tools.
 
+# Usage
+Require rpp-clj:
+
+```clojure
+(require '[rpp-clj.core :refer [parse-rpp-file output-rpp]))
+```
+
+Parse a DOM of the project file:
+
+```clojure
+(def dom (parse-rpp-file "/REAPER_MEDIA/project.RPP"))
+
+;; Creates a DOM with this structure.
+;; [:<
+;;  [:reaper-project "0.1" "\"5.979/linux64\"" "1581079158"]
+;;  [:ripple "0"]
+;;  [:groupoverride "0" "0" "0"]
+;;  [:autoxfade "1"]
+;;  [:envattach "1"]
+;;  .
+;;  .
+;;  .
+;;   [:< [:record-cfg]]
+;;   [:< [:applyfx-cfg]]
+
+
+```
+
+The structure is a nested vector representation of the project
+file. Nesting structures start with **:<** keyword. Attributes and their
+parameters are represented as vectors. The attribute names are
+keywordized to a Clojure-like representation. Parameters are
+represented as strings. Note that when Reaper has a quoted
+parameter, this is wrapped to quotes in this representation as well
+(see **:reaper-project** attribute parameters for example).
+
+You can make any manipulations you want to this structure and then
+render a new project with **output-rpp**:
+
+```clojure
+(output-rpp dom)
+```
+
+It creates a String representation which you can save to a RPP project
+file.
+
+See [/examples](./examples) for more details.
 
 # TODO
 Is it a good idea to further parse the arguments? Currently everything

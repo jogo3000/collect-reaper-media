@@ -45,7 +45,7 @@
 
       (or (= \return c)
           (= \newline c))
-      (let [node (if-not (empty? symbol) (conj node (apply str symbol)) node)]
+      (let [node (store-symbol node symbol)]
         (assoc s :state :idle
                :symbol []
                :node []
@@ -102,8 +102,7 @@
                   (map #(if (= :< (first %))
                           (str/join \newline (output-group % (inc level)))
                           (output-attribute % (inc level))) children))
-            (list (str hanging-ingress \>))))
-)
+            (list (str hanging-ingress \>)))))
 
 (defn output-rpp
   "Takes a DOM representation and outputs a string representation in the RPP file format"

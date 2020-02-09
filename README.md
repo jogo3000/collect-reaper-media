@@ -14,7 +14,7 @@ Reaper project cleaning tools.
 
 
 # TODO
-Is it a good idea to furhter parse the arguments? Currently everything
+Is it a good idea to further parse the arguments? Currently everything
 is considered a String argument. It might be easier to manipulate the
 DOM if those types would be changed to native types. The problem with
 this approach is that all of the String typed arguments aren't

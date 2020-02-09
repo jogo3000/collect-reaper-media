@@ -1,4 +1,4 @@
-(ns main.clj.core-test
+(ns rpp-clj.core-test
   (:require  [clojure.test :as t :refer [deftest is testing]]
              [rpp-clj.core :as rpp]))
 

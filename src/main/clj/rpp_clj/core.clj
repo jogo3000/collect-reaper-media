@@ -3,7 +3,7 @@
 
 (def ^{:private true} state
   {:stack []
-   :state :idle
+   :mode :default
    :group []
    :symbol []
    :node []})
@@ -21,24 +21,25 @@
   (if (empty? node) group
       (conj group (keywordize-attr node))))
 
-(defn- consume [{:keys [group stack state symbol node] :as s} c]
-  (if (= state :quoted)
+(defn- consume [{:keys [group stack mode symbol node] :as state} c]
+  (if (= mode :quoted)
     (if-not (= c \")
-      (assoc s :symbol (conj symbol c))
-      (assoc s
-             :state :idle
+      (assoc state :symbol (conj symbol c))
+      (assoc state
+             :mode :default
              :symbol []
              :node (conj node (str \" (apply str symbol) \"))))
     (cond
       (= \< c)
-      (assoc s
+      (assoc state
+             :mode :default
              :stack (conj stack group)
              :group [:<]
              :node [])
 
       (= \> c)
-      (assoc s
-             :state :idle
+      (assoc state
+             :mode :default
              :stack (pop stack)
              :group (conj (last stack) group)
              :node [])
@@ -46,21 +47,24 @@
       (or (= \return c)
           (= \newline c))
       (let [node (store-symbol node symbol)]
-        (assoc s :state :idle
+        (assoc state
+               :mode :default
                :symbol []
                :node []
                :group (store-node group node)))
 
       (= \space c)
-      (assoc s
+      (assoc state
              :node (store-symbol node symbol)
              :symbol [])
 
       (= \" c)
-      (assoc s :state :quoted :symbol [])
+      (assoc state
+             :mode :quoted
+             :symbol [])
 
       :else
-      (assoc s :symbol (conj symbol c)))))
+      (assoc state :symbol (conj symbol c)))))
 
 (defn parse-rpp
     "Take an RPP file in string format and outputs a DOM representation. Every <
